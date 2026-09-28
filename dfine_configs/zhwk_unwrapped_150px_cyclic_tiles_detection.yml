@@ -1,0 +1,36 @@
+task: detection
+
+evaluator:
+  type: CocoEvaluator
+  iou_types: ['bbox']
+
+# Keep the original 23 raw IDs in this controlled D-FINE ablation.
+# The sampler reduces repeated all-negative tiles but does not rewrite labels.
+num_classes: 23
+remap_mscoco_category: False
+
+train_dataloader:
+  type: DataLoader
+  dataset:
+    type: CocoDetection
+    img_folder: ../../../zhwk_unwrapped_150px_cyclic_tiles_padded160_v1/images/train
+    ann_file: ../../../zhwk_unwrapped_150px_cyclic_tiles_padded160_v1/annotations/instances_train_diverse_neg0p5_ascii.json
+    return_masks: False
+  shuffle: True
+  num_workers: 0
+  drop_last: True
+  collate_fn:
+    type: BatchImageCollateFunction
+
+val_dataloader:
+  type: DataLoader
+  dataset:
+    type: CocoDetection
+    img_folder: ../../../zhwk_unwrapped_150px_cyclic_tiles_padded160_v1/images/val
+    ann_file: ../../../zhwk_unwrapped_150px_cyclic_tiles_padded160_v1/annotations/instances_val.json
+    return_masks: False
+  shuffle: False
+  num_workers: 0
+  drop_last: False
+  collate_fn:
+    type: BatchImageCollateFunction

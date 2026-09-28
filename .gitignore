@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.venv/
+venv/
+
+# Experiment artifacts and data
+data/
+datasets/
+annotations/
+images/
+outputs/
+runs/
+checkpoints/
+weights/
+*.pt
+*.pth
+*.onnx
+*.bin
+*.ckpt
+
+# Generated reports and local tooling
+*.log
+*.csv
+*.joblib
+*.pkl
+.DS_Store
+Thumbs.db

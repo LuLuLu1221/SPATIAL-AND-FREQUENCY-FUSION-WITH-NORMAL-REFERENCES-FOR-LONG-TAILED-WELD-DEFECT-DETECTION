@@ -1,0 +1,116 @@
+__include__: [
+  'zhwk_unwrapped_150px_cyclic_tiles_detection.yml',
+  '../third_party/D-FINE/configs/runtime.yml',
+  '../third_party/D-FINE/configs/dfine/include/dataloader.yml',
+  '../third_party/D-FINE/configs/dfine/include/optimizer.yml',
+  '../third_party/D-FINE/configs/dfine/include/dfine_hgnetv2.yml',
+]
+
+# Confusable-3 fine-tune v1.
+# Goal: preserve the strong 150px cyclic-window baseline while reducing subtype
+# confusion among:
+#   12 = broken_weld
+#   14 = long_weld_high_collapse
+#   15 = missing_weld_blue_black
+#
+# Compared with the merged-class run, these three labels are NOT merged.  The
+# train COCO view only mildly repeats classes 12/14/15, and a small margin loss
+# asks the classifier to separate these three similar defect subtypes.
+output_dir: ../../../zhwk_runs/dfine_s_unwrapped_150px_cyclic_tiles_20260826_seed0_r1_confusable3_margin_v1
+tuning: ../../../zhwk_runs/dfine_s_unwrapped_150px_cyclic_tiles_20260826_seed0_r1/best_stg1.pth
+use_amp: False
+checkpoint_freq: 1
+eval_spatial_size: [160, 1024]
+
+DFINE:
+  backbone: HGNetv2
+
+HGNetv2:
+  name: 'B0'
+  return_idx: [1, 2, 3]
+  freeze_at: -1
+  freeze_norm: False
+  use_lab: True
+
+DFINETransformer:
+  num_layers: 3
+  eval_idx: -1
+
+HybridEncoder:
+  in_channels: [256, 512, 1024]
+  hidden_dim: 256
+  depth_mult: 0.34
+  expansion: 0.5
+
+# Short, low-LR fine-tuning from the best 150px cyclic baseline.
+epochs: 12
+optimizer:
+  type: AdamW
+  params:
+    - params: '^(?=.*backbone)(?!.*norm|bn).*$'
+      lr: 0.00001
+    - params: '^(?=.*backbone)(?=.*norm|bn).*$'
+      lr: 0.00001
+      weight_decay: 0.
+    - params: '^(?=.*(?:encoder|decoder))(?=.*(?:norm|bn|bias)).*$'
+      weight_decay: 0.
+  lr: 0.00003
+  betas: [0.9, 0.999]
+  weight_decay: 0.0001
+
+lr_scheduler:
+  type: MultiStepLR
+  milestones: [8, 11]
+  gamma: 0.1
+
+DFINECriterion:
+  weight_dict: {loss_vfl: 1, loss_bbox: 5, loss_giou: 2, loss_fgl: 0.15, loss_ddf: 1.5, loss_margin: 0.25}
+  losses: ['vfl', 'boxes', 'local', 'margin']
+  alpha: 0.75
+  gamma: 2.0
+  reg_max: 32
+  confusable_pairs: [[12, 14], [12, 15], [14, 15]]
+  confusable_margin: 1.0
+
+  matcher:
+    type: HungarianMatcher
+    weight_dict: {cost_class: 2, cost_bbox: 5, cost_giou: 2}
+    alpha: 0.25
+
+train_dataloader:
+  total_batch_size: 4
+  num_workers: 0
+  dataset:
+    img_folder: ../../../zhwk_unwrapped_150px_cyclic_tiles_padded160_v1/images/train
+    ann_file: ../../../zhwk_unwrapped_150px_cyclic_tiles_padded160_v1/annotations/instances_train_confusable3_only_v1.json
+    transforms:
+      type: Compose
+      ops:
+        - {type: RandomPhotometricDistort, p: 0.5}
+        - {type: RandomHorizontalFlip}
+        - {type: SanitizeBoundingBoxes, min_size: 1}
+        - {type: ConvertPILImage, dtype: 'float32', scale: True}
+        - {type: ConvertBoxes, fmt: 'cxcywh', normalize: True}
+      policy:
+        name: stop_epoch
+        epoch: 12
+        ops: []
+  collate_fn:
+    type: BatchImageCollateFunction
+    base_size: [160, 1024]
+    base_size_repeat: ~
+    stop_epoch: 12
+    ema_restart_decay: 0.9999
+
+val_dataloader:
+  total_batch_size: 4
+  num_workers: 0
+  dataset:
+    transforms:
+      type: Compose
+      ops:
+        - {type: ConvertPILImage, dtype: 'float32', scale: True}
+  collate_fn:
+    type: BatchImageCollateFunction
+    base_size: [160, 1024]
+    base_size_repeat: ~
