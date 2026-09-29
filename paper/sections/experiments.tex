@@ -1,0 +1,47 @@
+\section{Experimental Setup}
+
+\subsection{Industrial Dataset and Long-Tail Protocol}
+
+The in-house annular-weld dataset contains 22 raw annotated defect classes, with 4,700 training and 1,124 validation instances. For the class-grouped evidence audit, small smoke, smoke cluster, and smoke are merged; missing weld, long weld-height collapse, missing-weld blue-black, and seam blue-black are merged. Steel cap, pad separation, missing-weld crack, desoldering, and weld-height seam are excluded. This produces the 1,122-instance evaluation scope in Table~\ref{tab:dataset}. The distribution remains strongly imbalanced: the largest class has 259 validation instances, whereas pit has two. We additionally audit six rare and operationally important focus-tail defects, comprising 33 validation instances. For this subset, we report correct, wrong-class, and missed detections explicitly. A tail gain is not meaningful if missed instances are merely replaced by incorrect class assignments.
+
+\begin{table}[t]
+\caption{Class-grouped industrial validation protocol after the specified merges and exclusions. The raw train/validation splits contain 4,700/1,124 instances; the evidence audit uses the 1,122 effective validation instances below.}
+\label{tab:dataset}
+\centering
+\scriptsize
+\setlength{\tabcolsep}{2.6pt}
+\begin{tabular}{llr}
+\toprule
+Frequency group & Class after merging & Val. instances \\
+\midrule
+Head & Weld-height stripe & 259 \\
+     & Smoke family & 204 \\
+     & Missing-weld/collapse family & 232 \\
+\midrule
+Medium & Weld hole / long height crack & 79 / 69 \\
+       & Weld explosion / high smoke & 62 / 76 \\
+\midrule
+Tail & Long weld hole / point height & 71 / 37 \\
+     & Slag / gray weld / pit & 22 / 9 / 2 \\
+     & Long weld height & 0 \\
+\midrule
+\textbf{Total} & \textbf{13 grouped classes} & \textbf{1,122} \\
+\bottomrule
+\end{tabular}
+\end{table}
+\subsection{Implementation and Fusion Ablation}
+
+D-FINE-S with an HGNetv2-B0 backbone serves as the candidate generator. The in-house detector is trained for 32 epochs, and the epoch-14 checkpoint is selected. The annular strip is processed using no-stretch, periodic overlapping windows in the 150-pixel seam-height configuration. Candidate-generation controls compare direct circular input, ordinary unwrapping, extended-context unwrapping, and periodic 150-pixel windows.
+
+The completed industrial evidence ablation compares A0, D-FINE score; A1, $+$ IBO spatial/group evidence; A2, $+$ normal-reference distance; A3, $+$ local-frequency evidence; A4, $+$ normal-reference and frequency evidence; and A5, $+$ restricted gray-weld versus collapse-family correction. Each variant uses the same candidate groups and class-merging protocol, with its operating threshold selected from the predefined sweep. This A0--A5 study tests the implemented post-detection evidence pipeline and reports both all-class and focus-tail outcomes. It is distinct from a future end-to-end query-head ablation of fixed fusion, normal-reference conditioning, reliability weighting, and disagreement modeling.
+
+\noindent\textbf{Eligibility of additional long-tail comparators.} The primary in-house comparison includes methods whose final predictions have been re-audited with the same 1,122-instance grouping, matching rule, and correct/wrong-class/missed accounting. The three-stage SimLTD-style D-FINE-S schedule is included because its final stage has passed this identical audit. It retains the D-FINE-S architecture and applies a 20/6/6 head--tail--joint schedule; it is therefore reported as a \emph{SimLTD-style adaptation}, rather than as an official reproduction of SimLTD. The ROG Faster R-CNN R50FPN transfer model has also passed the same audit at $t=.25$ and is included as an architecture-diverse comparator. FRACAL is included with a dagger as a budget-matched calibration audit: its multiplicative post-calibration score uses a different operating scale and a separately frozen D-FINE-S candidate generator. Its overall, gray-weld, and collapse-family audit values are reported, while the unavailable identical focus-tail aggregate is marked ``--'' rather than inferred.
+\subsection{LVIS Transfer Pilot}
+
+We also use a pilot split of the LVIS long-tailed benchmark~\cite{gupta2019lvis}. The split comprises 10,000 training images with 117,605 annotations and 2,000 validation images with 20,891 annotations across 1,203 mapped categories. D-FINE-S is trained for 100 epochs using 640-pixel no-stretch resizing. Annular ROI extraction, unwrapping, and cyclic windows are disabled. IBO candidates are extracted at score 0.25. The normal-reference evidence model uses 12,000 normal samples, $k=5$ neighbours, a 256-pixel feature side, and seed 0. This transfer experiment evaluates candidate reliability rather than a replacement detector head. AUROC, AUPR, and $(C,W,M)$ under a common candidate-projection protocol are therefore its primary outcomes. We additionally export official LVIS AP as a secondary alignment check. For method-level context, we run FRACAL as an inference-only, per-image budget-matched recalibration of the frozen D-FINE-S outputs, and run the public SimLTD codebase with a 20/6/6 staged fast-pilot schedule. The latter uses the same split and 640-pixel preprocessing but is explicitly not the full official SimLTD training schedule.
+
+\subsection{Metrics}
+
+We report standard detector measures---AP, AP50, AP75, precision, and recall---whenever they are defined by the benchmark protocol. The industrial validation also records $(C,W,M)$, the numbers of correct, wrong-class, and missed instances. The class-aware matched rate is $C/N$, where $N$ is the number of annotated instances. Candidate coverage, tail-to-head confusion counts, and focus-tail outcomes are reported alongside aggregate metrics. This protocol distinguishes a reduction in missed tail defects from a recall gain caused by additional wrong-class selections.
+
+\textbf{Benchmark-aligned long-tail reporting.} The following benchmark-specific comparisons use fixed evaluation protocols. For the LVIS pilot and the SimLTD fast-pilot implementation~\cite{tran2025simltd}, we use the official LVIS API and report box AP together with AP50, AP75, and the frequency-group measures APr, APc, and APf. These are the average precisions for rare, common, and frequent LVIS categories, respectively; AR@300 is reported as a recall-oriented secondary measure. Candidate-level $(C,W,M)$, AUROC, AUPR, and $C/N$ are diagnostic measures; they must not be presented as substitutes for official LVIS AP. The corresponding numerical comparisons are reported separately for each benchmark, rather than mixing non-equivalent metrics in one table.

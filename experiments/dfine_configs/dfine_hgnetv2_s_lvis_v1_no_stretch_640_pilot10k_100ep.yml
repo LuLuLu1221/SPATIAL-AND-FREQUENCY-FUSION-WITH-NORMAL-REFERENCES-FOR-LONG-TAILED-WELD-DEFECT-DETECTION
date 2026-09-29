@@ -1,0 +1,91 @@
+__include__: [
+  'lvis_v1_dfine_no_stretch_detection_pilot10k.yml',
+  '../third_party/D-FINE/configs/runtime.yml',
+  '../third_party/D-FINE/configs/dfine/include/dataloader.yml',
+  '../third_party/D-FINE/configs/dfine/include/optimizer.yml',
+  '../third_party/D-FINE/configs/dfine/include/dfine_hgnetv2.yml',
+]
+
+output_dir: ../../../zhwk_runs/simltd_lvis_dfine_s_no_stretch_640_pilot10k_bs4_100ep_20260917_seed0
+use_amp: True
+checkpoint_freq: 1
+eval_spatial_size: [640, 640]
+
+DFINE:
+  backbone: HGNetv2
+
+HGNetv2:
+  name: 'B0'
+  return_idx: [1, 2, 3]
+  freeze_at: -1
+  freeze_norm: False
+  use_lab: True
+
+DFINETransformer:
+  num_layers: 3
+  eval_idx: -1
+
+HybridEncoder:
+  in_channels: [256, 512, 1024]
+  hidden_dim: 256
+  depth_mult: 0.34
+  expansion: 0.5
+
+epochs: 100
+
+optimizer:
+  type: AdamW
+  params:
+    - params: '^(?=.*backbone)(?!.*norm|bn).*$'
+      lr: 0.0000125
+    - params: '^(?=.*backbone)(?=.*norm|bn).*$'
+      lr: 0.0000125
+      weight_decay: 0.
+    - params: '^(?=.*(?:encoder|decoder))(?=.*(?:norm|bn|bias)).*$'
+      weight_decay: 0.
+  lr: 0.00025
+  betas: [0.9, 0.999]
+  weight_decay: 0.000125
+
+lr_scheduler:
+  type: MultiStepLR
+  milestones: [62, 88]
+  gamma: 0.1
+
+train_dataloader:
+  total_batch_size: 4
+  num_workers: 0
+  dataset:
+    transforms:
+      type: Compose
+      ops:
+        - {type: RandomPhotometricDistort, p: 0.5}
+        - {type: RandomHorizontalFlip}
+        - {type: ResizeMaxPad, size: [640, 640], fill: 0}
+        - {type: SanitizeBoundingBoxes, min_size: 1}
+        - {type: ConvertPILImage, dtype: 'float32', scale: True}
+        - {type: ConvertBoxes, fmt: 'cxcywh', normalize: True}
+      policy:
+        name: stop_epoch
+        epoch: 100
+        ops: []
+  collate_fn:
+    type: BatchImageCollateFunction
+    base_size: 640
+    base_size_repeat: ~
+    stop_epoch: 100
+    ema_restart_decay: 0.9999
+
+val_dataloader:
+  total_batch_size: 4
+  num_workers: 0
+  dataset:
+    transforms:
+      type: Compose
+      ops:
+        - {type: ResizeMaxPad, size: [640, 640], fill: 0}
+        - {type: ConvertPILImage, dtype: 'float32', scale: True}
+  collate_fn:
+    type: BatchImageCollateFunction
+    base_size: 640
+    base_size_repeat: ~

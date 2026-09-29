@@ -20,6 +20,8 @@ The detailed method, evaluation protocol, current results, and limitations are i
 .
 ├── dfine_configs/       # D-FINE training and dataset configurations
 ├── docs/                # Experiment reports and public-dataset plan
+├── experiments/         # LVIS, SimLTD, FRACAL, and ROG experiment additions
+├── paper/               # ICASSP 2027 NORA manuscript source and figures
 ├── scripts/             # Data preparation, IBO, evaluation, and ablations
 ├── requirements.txt     # Python dependencies used by the auxiliary scripts
 └── 文件清单与作用.md       # Chinese file-by-file index
@@ -53,6 +55,13 @@ Run every script with `--help` before use to see its required input paths.  Some
 - The reported 150-pixel results are from an internal industrial dataset and should not be interpreted as a public benchmark.
 - The original study uses a fixed split and seed for the reported experiment.  Use repeated runs or cross-validation when comparing methods on a small dataset.
 - The LoHi-WELD plan is a proposed public-data evaluation protocol; it is not presented as completed benchmark results.
+- `experiments/` contains source code, configurations, and protocols for the
+  subsequent LVIS-pilot and comparator studies.  It does not include their
+  datasets, checkpoints, prediction files, or third-party framework snapshots.
+- `paper/` is the current ICASSP 2027 working manuscript for NORA
+  (Normal-Reference-Aided spatial--frequency candidate re-evaluation).  The
+  paper figures are derived illustrations and selected validation examples;
+  raw industrial images and annotations remain excluded.
 
 ## Citation
 

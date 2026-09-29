@@ -1,0 +1,63 @@
+% ICASSP 2027 working manuscript. Final author names and affiliations are required.
+\documentclass{article}
+\usepackage{spconf,amsmath,graphicx,booktabs,tikz}
+\usepackage[hidelinks]{hyperref}
+\usetikzlibrary{arrows.meta,positioning,fit,calc,backgrounds}
+
+% Keep float-only pages compact: place wide tables and figures at the top,
+% with any unavoidable slack collected at the page bottom.
+\makeatletter
+\setlength{\@fptop}{0pt}
+\setlength{\@fpsep}{12pt}
+\setlength{\@fpbot}{0pt plus 1fil}
+\setlength{\@dblfptop}{0pt}
+\setlength{\@dblfpsep}{12pt}
+\setlength{\@dblfpbot}{0pt plus 1fil}
+\makeatother
+\renewcommand{\topfraction}{0.95}
+\renewcommand{\bottomfraction}{0.95}
+\renewcommand{\textfraction}{0.06}
+\renewcommand{\floatpagefraction}{0.80}
+\renewcommand{\dbltopfraction}{0.95}
+\renewcommand{\dblfloatpagefraction}{0.80}
+\setlength{\textfloatsep}{12pt plus 2pt minus 2pt}
+\setlength{\floatsep}{10pt plus 2pt minus 2pt}
+\setlength{\intextsep}{10pt plus 2pt minus 2pt}
+
+\def\x{{\mathbf x}}
+\def\L{{\cal L}}
+
+\title{Spatial and Frequency Fusion with Normal References for Long-Tailed Weld Defect Detection}
+
+\name{\shortstack{Guanwei Lu$^{1}$ \qquad Zilai Wang$^{2}$ \qquad Huwenkang Zhang$^{3}$\\
+Gang Luo$^{4,*}$ \qquad Zhengji Liu$^{5,*}$}\thanks{*Corresponding authors: Gang Luo (hi.gangluo@gmail.com) and Zhengji Liu (21062388r@connect.polyu.hk).}}
+\address{$^{1}$College of Mechatronics and Control Engineering, Shenzhen University,  Guangdong Province, China\\
+$^{2}$School of Computer Science and Engineering,\\South China University of Technology, Guangdong Province, China\\
+$^{3}$Aberdeen Institute of Data Science and Artificial Intelligence,\\South China Normal University, Guangdong Province, China\\
+$^{4}$Shenzhen Pingze Intelligent Technology Co., Ltd., Guangdong Province, China\\
+$^{5}$School of Optometry, The Hong Kong Polytechnic University, Hong Kong SAR, China}
+
+\begin{document}
+\ninept
+\maketitle
+
+\begin{abstract}
+Long-tailed object detection suffers from missed detections and class confusion in rare classes with limited training samples. Class confidence alone can struggle to distinguish underrepresented objects from background variations, motivating structural evidence beyond class predictions. We propose NORA, which uses normal references to fuse spatial and frequency evidence for candidate re-evaluation. NORA measures transitions across candidate interiors, boundaries, and surrounding regions, normalizes them against comparable normal-region statistics, and combines the two branches using uncertainty and anomaly strength. On an industrial annular weld validation set, candidate re-evaluation reduces the miss rate from 21.2\% to 9.1\% and the misclassification rate from 63.6\% to 51.5\% on the evaluated rare-defect subset. The class-aware matched rate across all classes increases from 86.48\% to 92.53\%. These results demonstrate the value of normal-reference evidence for rare-defect detection under class imbalance.
+\end{abstract}
+
+\begin{keywords}
+Long-tailed defect detection, annular weld inspection, spatial--frequency fusion, normal-reference conditioning, candidate reliability.
+\end{keywords}
+
+\input{sections/introduction}
+\input{sections/method}
+\input{sections/experiments}
+\input{sections/results}
+\input{sections/conclusion}
+
+\clearpage
+\raggedbottom
+\bibliographystyle{IEEEbib}
+\bibliography{refs}
+
+\end{document}

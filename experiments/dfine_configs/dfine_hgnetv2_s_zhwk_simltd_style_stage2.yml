@@ -1,0 +1,26 @@
+__include__: ['dfine_hgnetv2_s_zhwk_unwrapped_150px_cyclic_tiles.yml']
+output_dir: ../../../zhwk_runs/simltd_style_dfine_s_zhwk_150px_32ep_20260920_seed0/stage2_tail
+epochs: 6
+optimizer:
+  type: AdamW
+  lr: 0.00001
+  betas: [0.9, 0.999]
+  weight_decay: 0.0001
+
+lr_scheduler:
+  type: MultiStepLR
+  milestones: [4, 5]
+  gamma: 0.1
+train_dataloader:
+  dataset:
+    ann_file: ../../../zhwk_simltd_style_weld_20260920_seed0/annotations/instances_stage2_tail.json
+    transforms:
+      policy:
+        name: stop_epoch
+        epoch: 6
+        ops: []
+  collate_fn:
+    stop_epoch: 6
+    ema_restart_decay: 0.9999
+
+
